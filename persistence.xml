@@ -1,0 +1,10 @@
+<hibernate-configuration>
+    <session-factory>
+        <!-- Настройка JDBC -->
+        <property name="hibernate.connection.driver_class">com.mysql.cj.jdbc.Driver</property>
+        <property name="hibernate.connection.url">jdbc:mysql://77.120.176.234:3306/BukerEnglish?serverTimezone=UTC&amp;
+            useUnicode=yes&amp;characterEncoding=UTF-8&amp;characterSetResults=UTF-8&amp;createDatabaseIfNotExist=true</property>
+        <property name="hibernate.connection.username">root</property>
+        <property name="hibernate.connection.password">19092708MishaLena</property>
+    </session-factory>
+</hibernate-configuration>
