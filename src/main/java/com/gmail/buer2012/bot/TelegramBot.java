@@ -18,6 +18,7 @@ public class TelegramBot extends TelegramLongPollingBot {
     private static String BOT_USERNAME = "BukerEnglish_bot";
     private static String DELETE = "Delete";
     private static String NEXT = "Next";
+    private static String SUCCESS = "Удалено";
     private Session session;
     private Task currentTask;
 
@@ -37,6 +38,7 @@ public class TelegramBot extends TelegramLongPollingBot {
                     Random rand = new Random();
                     Task randomTask = tasks.get(rand.nextInt(tasks.size()));
                     this.setCurrentTask(randomTask);
+                    this.execute(new SendMessage(update.getMessage().getChatId(), SUCCESS));
                     this.execute(new SendMessage(update.getMessage().getChatId(), randomTask.getRussianWord()));
                     this.session.getTransaction().commit();
                 } else if (update.getMessage().toString().equals(NEXT)) {
