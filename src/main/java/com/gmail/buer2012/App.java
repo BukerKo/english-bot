@@ -35,7 +35,6 @@ public class App {
         
         ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
         executorService.scheduleAtFixedRate(() -> {
-            bot.setTasks();
             bot.setNewTask();
             chatIds.forEach(bot::sendTask);
         }, 0L, 10L, TimeUnit.MINUTES);

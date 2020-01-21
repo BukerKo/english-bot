@@ -2,14 +2,18 @@ package com.gmail.buer2012.bot;
 
 import com.gmail.buer2012.entity.Task;
 import com.google.common.collect.ImmutableList;
+import org.hibernate.Criteria;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
+import org.hibernate.Transaction;
+import org.hibernate.query.NativeQuery;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
 import javax.persistence.Query;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 import java.util.concurrent.Executors;
@@ -25,13 +29,10 @@ public class TelegramBot extends TelegramLongPollingBot {
     private static String SUCCESS = "Удалено";
     
     private SessionFactory sessionFactory;
-    private List<Task> tasks;
     private Task currentTask;
-    private Random random;
     
     public TelegramBot(SessionFactory sessionFactory) {
         this.sessionFactory = sessionFactory;
-        this.random = new Random(System.currentTimeMillis());
     }
     
     @Override
@@ -48,37 +49,21 @@ public class TelegramBot extends TelegramLongPollingBot {
         }
     }
     
+    public void setNewTask() {
+        currentTask = getRandomTaskFromDb();
+    }
+    
     public void sendTask(Long chatId) {
         sendMessage(chatId, currentTask.getRussianWord());
     }
     
-    
-    public void setNewTask() {
-        currentTask = tasks.get(random.nextInt(tasks.size()));
-    }
-    
-    public void setTasks() {
-        Session session = getSession();
-        session.beginTransaction();
-        Query query = session.createQuery("from Task");
-        List<Task> tasks = query.getResultList();
-        session.getTransaction().commit();
-        this.tasks = tasks;
-        session.close();
-    }
-    
     public void deleteTask() {
-        Session session = getSession();
-        session.beginTransaction();
-        Query query = session.createQuery("delete from Task where Task.id = (:id)");
-        query.setParameter("id", currentTask.getId());
-        query.executeUpdate();
-        session.getTransaction().commit();
+        Session session = sessionFactory.openSession();
+        Transaction transaction = session.beginTransaction();
+        Task task = session.get(Task.class, currentTask.getId());
+        session.remove(task);
+        transaction.commit();
         session.close();
-    }
-    
-    private Session getSession() {
-        return sessionFactory.openSession();
     }
     
     private void sendAnswer(Long chatId) {
@@ -86,7 +71,7 @@ public class TelegramBot extends TelegramLongPollingBot {
     }
     
     private void sendRandomTask(Long chatId) {
-        Task randomTask = tasks.get(random.nextInt(tasks.size()));
+        Task randomTask = getRandomTaskFromDb();
         sendMessage(chatId, randomTask.getRussianWord());
         ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
         executorService.schedule(() -> sendMessage(chatId, randomTask.getEnglishWord()), 10L, TimeUnit.SECONDS);
@@ -98,6 +83,14 @@ public class TelegramBot extends TelegramLongPollingBot {
         } catch (TelegramApiException e) {
             e.printStackTrace();
         }
+    }
+    
+    private Task getRandomTaskFromDb() {
+        Session session = sessionFactory.openSession();
+        Integer id = (Integer) session.createSQLQuery("SELECT ID FROM task ORDER BY RAND() LIMIT 1").getSingleResult();
+        Task task = session.get(Task.class, Long.valueOf(id));
+        session.close();
+        return task;
     }
     
     @Override
