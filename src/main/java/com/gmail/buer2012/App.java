@@ -38,7 +38,7 @@ public class App {
             bot.setTasks();
             bot.setNewTask();
             chatIds.forEach(bot::sendTask);
-        }, 1L, 30L, TimeUnit.SECONDS);
+        }, 0L, 10L, TimeUnit.MINUTES);
     }
     
     
