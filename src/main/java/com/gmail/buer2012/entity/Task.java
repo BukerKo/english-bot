@@ -17,12 +17,14 @@ public class Task {
     @Column(name = "russianWord")
     private String russianWord;
 
-    public Task(String englishWord, String russianWord) {
+    public Task(Long id, String englishWord, String russianWord) {
         this.englishWord = englishWord;
         this.russianWord = russianWord;
+        this.id = id;
     }
     
     public Task() {
+
     }
     
     public String getEnglishWord() {
@@ -31,5 +33,9 @@ public class Task {
 
     public String getRussianWord() {
         return russianWord;
+    }
+
+    public Long getId() {
+        return id;
     }
 }
