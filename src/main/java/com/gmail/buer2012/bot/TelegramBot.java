@@ -12,7 +12,6 @@ import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import javax.persistence.Query;
 import java.util.List;
 import java.util.Random;
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -25,7 +24,6 @@ public class TelegramBot extends TelegramLongPollingBot {
     private static List<String> NEXT_STRINGS = ImmutableList.of("Next", "next");
     private static String SUCCESS = "Удалено";
     
-    private List<Long> chatIds;
     private SessionFactory sessionFactory;
     private List<Task> tasks;
     private Task currentTask;
@@ -100,14 +98,6 @@ public class TelegramBot extends TelegramLongPollingBot {
         } catch (TelegramApiException e) {
             e.printStackTrace();
         }
-    }
-    
-    public List<Long> getChatIds() {
-        return chatIds;
-    }
-    
-    public void setChatIds(List<Long> chatIds) {
-        this.chatIds = chatIds;
     }
     
     @Override
