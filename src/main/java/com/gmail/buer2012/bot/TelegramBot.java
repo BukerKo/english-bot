@@ -30,7 +30,7 @@ public class TelegramBot extends TelegramLongPollingBot {
     public void onUpdateReceived(Update update) {
         if ((update.hasMessage() && update.getMessage().hasText()) || update.hasCallbackQuery()) {
             try {
-                if (update.getMessage().toString().equals(DELETE)) {
+                if (update.getMessage().getText().equals(DELETE)) {
                     this.session.beginTransaction();
                     Query qry = this.session.createQuery("delete from Task where Task.id = (:id)");
                     qry.setParameter("id", currentTask.getId());
@@ -41,7 +41,7 @@ public class TelegramBot extends TelegramLongPollingBot {
                     this.execute(new SendMessage(update.getMessage().getChatId(), SUCCESS));
                     this.execute(new SendMessage(update.getMessage().getChatId(), randomTask.getRussianWord()));
                     this.session.getTransaction().commit();
-                } else if (update.getMessage().toString().equals(NEXT)) {
+                } else if (update.getMessage().getText().equals(NEXT)) {
                     this.session.beginTransaction();
                     List<Task> tasks = App.getTasks(this.session);
                     Random rand = new Random();
