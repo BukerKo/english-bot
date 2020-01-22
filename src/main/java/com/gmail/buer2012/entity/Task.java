@@ -23,8 +23,21 @@ public class Task {
         this.id = id;
     }
     
+    public Task(String russianWord, String englishWord) {
+        this.englishWord = englishWord;
+        this.russianWord = russianWord;
+    }
+    
     public Task() {
 
+    }
+    
+    @Override
+    public String toString() {
+        return "Task{" +
+                "englishWord='" + englishWord + '\'' +
+                ", russianWord='" + russianWord + '\'' +
+                '}';
     }
     
     public String getEnglishWord() {

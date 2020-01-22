@@ -42,7 +42,8 @@ public class TelegramBot extends TelegramLongPollingBot {
                 deleteTask();
                 sendMessage(update.getMessage().getChatId(), SUCCESS);
             } else if (NEXT_STRINGS.contains(update.getMessage().getText())) {
-                sendRandomTask(update.getMessage().getChatId());
+                setNewTask();
+                sendTask(update.getMessage().getChatId());
             } else {
                 sendAnswer(update.getMessage().getChatId());
             }
