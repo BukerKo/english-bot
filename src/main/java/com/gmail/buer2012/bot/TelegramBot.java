@@ -1,32 +1,26 @@
 package com.gmail.buer2012.bot;
 
 import com.gmail.buer2012.entity.Task;
-import com.google.common.collect.ImmutableList;
-import org.hibernate.Criteria;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;
-import org.hibernate.query.NativeQuery;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Update;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMarkup;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardRow;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
-import javax.persistence.Query;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Random;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
+import java.util.Collections;
 
 public class TelegramBot extends TelegramLongPollingBot {
     
-    private static String BOT_TOKEN = "980204452:AAGaHipzq3CNsGiFdQTR-Fd0lU_PdSe2pgo";
-    private static String BOT_USERNAME = "BukerEnglish_bot";
-    private static List<String> DELETE_STRINGS = ImmutableList.of("Delete", "delete");
-    private static List<String> NEXT_STRINGS = ImmutableList.of("Next", "next");
-    private static String SUCCESS = "Удалено";
+    private static final String BOT_TOKEN = "980204452:AAGaHipzq3CNsGiFdQTR-Fd0lU_PdSe2pgo";
+    private static final String BOT_USERNAME = "BukerEnglish_bot";
+    private static final String DELETE_STRING = "Delete";
+    private static final String NEXT_STRING = "Next";
+    private static final String ANSWER_STRING = "Answer";
+    private static final String SUCCESS = "Deleted";
     
     private SessionFactory sessionFactory;
     private Task currentTask;
@@ -37,15 +31,21 @@ public class TelegramBot extends TelegramLongPollingBot {
     
     @Override
     public void onUpdateReceived(Update update) {
+        Long chatId = update.getMessage().getChatId();
         if ((update.hasMessage() && update.getMessage().hasText()) || update.hasCallbackQuery()) {
-            if (DELETE_STRINGS.contains(update.getMessage().getText())) {
-                deleteTask();
-                sendMessage(update.getMessage().getChatId(), SUCCESS);
-            } else if (NEXT_STRINGS.contains(update.getMessage().getText())) {
-                setNewTask();
-                sendTask(update.getMessage().getChatId());
-            } else {
-                sendAnswer(update.getMessage().getChatId());
+            String text = update.getMessage().getText();
+            switch (text) {
+                case DELETE_STRING:
+                    deleteTask();
+                    sendMessage(chatId, SUCCESS);
+                    break;
+                case NEXT_STRING:
+                    setNewTask();
+                    sendTask(chatId);
+                    break;
+                case ANSWER_STRING:
+                    sendAnswer(chatId);
+                    break;
             }
         }
     }
@@ -71,16 +71,17 @@ public class TelegramBot extends TelegramLongPollingBot {
         sendMessage(chatId, currentTask.getEnglishWord());
     }
     
-    private void sendRandomTask(Long chatId) {
-        Task randomTask = getRandomTaskFromDb();
-        sendMessage(chatId, randomTask.getRussianWord());
-        ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
-        executorService.schedule(() -> sendMessage(chatId, randomTask.getEnglishWord()), 10L, TimeUnit.SECONDS);
-    }
-    
     private void sendMessage(Long chatId, String body) {
         try {
-            execute(new SendMessage(chatId, body));
+            KeyboardRow keyboardRow = new KeyboardRow();
+            keyboardRow.add(DELETE_STRING);
+            keyboardRow.add(NEXT_STRING);
+            keyboardRow.add(ANSWER_STRING);
+            
+            ReplyKeyboardMarkup replyKeyboardMarkup = new ReplyKeyboardMarkup();
+            replyKeyboardMarkup.setKeyboard(Collections.singletonList(keyboardRow));
+            replyKeyboardMarkup.setResizeKeyboard(true);
+            execute(new SendMessage().setChatId(chatId).setText(body).setReplyMarkup(replyKeyboardMarkup));
         } catch (TelegramApiException e) {
             e.printStackTrace();
         }
