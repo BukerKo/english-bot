@@ -26,7 +26,7 @@ import java.util.stream.Stream;
 
 public class App {
     
-    private static final List<Long> chatIds = Arrays.asList(304022315L);
+    private static final List<Long> chatIds = Arrays.asList(304022315L, 397052865L);
     
     public static void main(String[] args) {
         Configuration configuration = new Configuration();
