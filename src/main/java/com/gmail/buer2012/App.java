@@ -14,7 +14,9 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -24,7 +26,7 @@ import java.util.stream.Stream;
 
 public class App {
     
-    private static final List<Long> chatIds = Arrays.asList(304022315L, 397052865L);
+    private static final List<Long> chatIds = Arrays.asList(304022315L);
     
     public static void main(String[] args) {
         Configuration configuration = new Configuration();
@@ -43,8 +45,12 @@ public class App {
         
         ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
         executorService.scheduleAtFixedRate(() -> {
-            bot.setNewTask();
-            chatIds.forEach(bot::sendTask);
+            Map<Long, Task> chatIdToTask = new HashMap<>();
+            chatIds.forEach(chatId -> {
+                chatIdToTask.put(chatId, bot.getRandomTaskFromDb());
+            });
+            bot.setChatIdToTask(chatIdToTask);
+            bot.sendTasks();
         }, 0L, 10L, TimeUnit.MINUTES);
     }
     

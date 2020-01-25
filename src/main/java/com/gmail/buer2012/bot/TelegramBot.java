@@ -12,6 +12,7 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.Keyboard
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
 import java.util.Collections;
+import java.util.Map;
 
 public class TelegramBot extends TelegramLongPollingBot {
     
@@ -21,9 +22,10 @@ public class TelegramBot extends TelegramLongPollingBot {
     private static final String NEXT_STRING = "Next";
     private static final String ANSWER_STRING = "Answer";
     private static final String SUCCESS = "Deleted";
+    private static final Long BUKER_CHAT_ID = 304022315L;
     
     private SessionFactory sessionFactory;
-    private Task currentTask;
+    private Map<Long, Task> chatIdToTask;
     
     public TelegramBot(SessionFactory sessionFactory) {
         this.sessionFactory = sessionFactory;
@@ -36,11 +38,11 @@ public class TelegramBot extends TelegramLongPollingBot {
             String text = update.getMessage().getText();
             switch (text) {
                 case DELETE_STRING:
-                    deleteTask();
+                    deleteTask(chatId);
                     sendMessage(chatId, SUCCESS);
                     break;
                 case NEXT_STRING:
-                    setNewTask();
+                    setNewTask(chatId);
                     sendTask(chatId);
                     break;
                 case ANSWER_STRING:
@@ -50,31 +52,40 @@ public class TelegramBot extends TelegramLongPollingBot {
         }
     }
     
-    public void setNewTask() {
-        currentTask = getRandomTaskFromDb();
+    private void sendTask(Long chatId) {
+        sendMessage(chatId, chatIdToTask.get(chatId).getRussianWord());
     }
     
-    public void sendTask(Long chatId) {
-        sendMessage(chatId, currentTask.getRussianWord());
+    
+    public void sendTasks() {
+        chatIdToTask.forEach((id, task) -> {
+            sendMessage(id, task.getRussianWord());
+        });
     }
     
-    public void deleteTask() {
+    private void deleteTask(Long chatId) {
         Session session = sessionFactory.openSession();
         Transaction transaction = session.beginTransaction();
-        Task task = session.get(Task.class, currentTask.getId());
+        Task task = session.get(Task.class, chatIdToTask.get(chatId).getId());
         session.remove(task);
         transaction.commit();
         session.close();
     }
     
+    private void setNewTask(Long chatId) {
+        chatIdToTask.put(chatId, getRandomTaskFromDb());
+    }
+    
     private void sendAnswer(Long chatId) {
-        sendMessage(chatId, currentTask.getEnglishWord());
+        sendMessage(chatId, chatIdToTask.get(chatId).getEnglishWord());
     }
     
     private void sendMessage(Long chatId, String body) {
         try {
             KeyboardRow keyboardRow = new KeyboardRow();
-            keyboardRow.add(DELETE_STRING);
+            if (chatId.equals(BUKER_CHAT_ID)) {
+                keyboardRow.add(DELETE_STRING);
+            }
             keyboardRow.add(NEXT_STRING);
             keyboardRow.add(ANSWER_STRING);
             
@@ -87,7 +98,7 @@ public class TelegramBot extends TelegramLongPollingBot {
         }
     }
     
-    private Task getRandomTaskFromDb() {
+    public Task getRandomTaskFromDb() {
         Session session = sessionFactory.openSession();
         Integer id = (Integer) session.createSQLQuery("SELECT ID FROM task ORDER BY RAND() LIMIT 1").getSingleResult();
         Task task = session.get(Task.class, Long.valueOf(id));
@@ -103,5 +114,9 @@ public class TelegramBot extends TelegramLongPollingBot {
     @Override
     public String getBotToken() {
         return BOT_TOKEN;
+    }
+    
+    public void setChatIdToTask(Map<Long, Task> chatIdToTask) {
+        this.chatIdToTask = chatIdToTask;
     }
 }
